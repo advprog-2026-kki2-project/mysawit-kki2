@@ -6,13 +6,12 @@ plugins {
     id("org.sonarqube") version "5.0.0.4638"
 }
 
-
-group = 'com.example'
-version = '0.0.1-SNAPSHOT'
+group = "com.example"
+version = "0.0.1-SNAPSHOT"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -21,20 +20,20 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation("org.springframework.boot:spring-boot-starter-webmvc")
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.named('test') {
+tasks.named<Test>("test") {
     useJUnitPlatform()
-    finalizedBy jacocoTestReport
+    finalizedBy(tasks.named("jacocoTestReport"))
 }
 
-jacocoTestReport {
+tasks.named<JacocoReport>("jacocoTestReport") {
     reports {
-        xml.required = true
-        html.required = true
+        xml.required.set(true)
+        html.required.set(true)
     }
 }
