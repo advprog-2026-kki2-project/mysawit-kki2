@@ -16,7 +16,7 @@
 <br>Usability & Monitoring: Clarity for UX testing and Observability Dashboards to monitor system health.
 
 
-5. Deployment (Updated)
+5. Deployment
 <br>Azure
 <br>Due to delays in AWS license distribution, we are pivoting to Azure to ensure deployment readiness. We will utilize Docker containers to maintain environment parity across all stages.
 
