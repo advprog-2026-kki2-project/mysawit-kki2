@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.springframework.boot") version "4.0.2"
+    id("org.springframework.boot") version "3.5.11"
     id("io.spring.dependency-management") version "1.1.7"
     id("jacoco")
     id("org.sonarqube") version "5.0.0.4638"
@@ -20,7 +20,6 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -29,6 +28,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 }
 
 tasks.named<Test>("test") {

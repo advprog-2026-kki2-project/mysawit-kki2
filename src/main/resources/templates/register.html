@@ -31,8 +31,15 @@
                 role: document.getElementById("role").value
             })
         });
-        const data = await response.json();
-        alert("Registered user " + data.username + " with role " + data.role);
+
+        if (response.ok) {
+            const data = await response.json();
+            alert("Registered user " + data.username + " with role " + data.role);
+            window.location.href = "/login";
+        } else {
+            const data = await response.json().catch(() => ({}));
+            alert(data.error || "Registration failed. Please try again.");
+        }
     });
 </script>
 </body>
