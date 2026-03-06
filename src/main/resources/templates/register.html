@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+<h2>Register</h2>
+<form id="registerForm">
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="text" id="username" placeholder="Username" required><br>
+    <input type="password" id="password" placeholder="Password" required><br>
+    <select id="role">
+        <option value="LABORER">Laborer</option>
+        <option value="FOREMAN">Foreman</option>
+        <option value="DRIVER">Driver</option>
+        <option value="ADMIN">Admin</option>
+    </select><br>
+    <button type="submit">Register</button>
+</form>
+
+<script>
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const response = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                email: document.getElementById("email").value,
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value,
+                role: document.getElementById("role").value
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            alert("Registered user " + data.username + " with role " + data.role);
+            window.location.href = "/login";
+        } else {
+            const data = await response.json().catch(() => ({}));
+            alert(data.error || "Registration failed. Please try again.");
+        }
+    });
+</script>
+</body>
+</html>
