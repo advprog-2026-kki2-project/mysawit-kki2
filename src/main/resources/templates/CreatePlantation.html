@@ -115,12 +115,12 @@
         <form th:action="@{/plantation/create}" th:object="${plantation}" method="post">
             <div class="form-group">
                 <label for="plantationCode">Plantation Code</label>
-                <input type="text" id="plantationCode" th:field="*{plantationCode}" required placeholder="PL-001">
+                <input type="text" id="plantationCode" th:field="*{plantationCode}" required placeholder="PLT-20250603-0001">
             </div>
             
             <div class="form-group">
                 <label for="plantationName">Plantation Name</label>
-                <input type="text" id="plantationName" th:field="*{plantationName}" required placeholder="Green Valley Estate">
+                <input type="text" id="plantationName" th:field="*{plantationName}" required placeholder="Jakarta Selatan">
             </div>
 
             <div class="form-group">
