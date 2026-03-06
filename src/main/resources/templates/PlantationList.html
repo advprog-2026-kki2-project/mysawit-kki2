@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Plantation List - MySawit</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --border: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-edit {
+            background-color: #2196f3;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background-color: #1976d2;
+        }
+
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #d32f2f;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #555;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f1f8e9;
+        }
+
+        .coords-list {
+            font-size: 0.85em;
+            color: #666;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Plantations</h1>
+            <a th:href="@{/plantation/create}" class="btn btn-primary">+ Add New Plantation</a>
+        </div>
+
+        <table th:if="${not #lists.isEmpty(plantations)}">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Area (Ha)</th>
+                    <th>Corners (X, Y)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="p : ${plantations}">
+                    <td th:text="${p.plantationCode}"></td>
+                    <td th:text="${p.plantationName}"></td>
+                    <td th:text="${p.areaHectares}"></td>
+                    <td>
+                        <ul class="coords-list">
+                            <li th:each="c, iter : ${p.corners}">
+                                <span th:text="'C' + ${iter.index + 1} + ': (' + ${c.x} + ', ' + ${c.y} + ')'"></span>
+                            </li>
+                        </ul>
+                    </td>
+                    <td style="white-space: nowrap;">
+                        <a th:href="@{/plantation/edit/{id}(id=${p.plantationId})}" class="btn btn-edit">Edit</a>
+                        <form th:action="@{/plantation/delete/{id}(id=${p.plantationId})}" method="post"
+                            style="display: inline;">
+                            <button type="submit" class="btn btn-delete"
+                                onclick="return confirm('Are you sure you want to delete this plantation?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${#lists.isEmpty(plantations)}" class="empty-msg">
+            No plantations found. Click "+ Add New Plantation" to get started.
+        </div>
+    </div>
+</body>
+
+</html>
