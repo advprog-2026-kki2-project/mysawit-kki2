@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Plantation - MySawit</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --bg: #f5f5f5;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --error: #d32f2f;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .corner-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .corner-group-header {
+            grid-column: span 2;
+            font-size: 0.9em;
+            color: #666;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        .error {
+            color: var(--error);
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 5px solid var(--error);
+        }
+        .links {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create Plantation</h1>
+        
+        <div th:if="${error}" class="error">
+            <p th:text="${error}"></p>
+        </div>
+
+        <form th:action="@{/plantation/create}" th:object="${plantation}" method="post">
+            <div class="form-group">
+                <label for="plantationCode">Plantation Code</label>
+                <input type="text" id="plantationCode" th:field="*{plantationCode}" required placeholder="PL-001">
+            </div>
+            
+            <div class="form-group">
+                <label for="plantationName">Plantation Name</label>
+                <input type="text" id="plantationName" th:field="*{plantationName}" required placeholder="Green Valley Estate">
+            </div>
+
+            <div class="form-group">
+                <label for="areaHectares">Area (Hectares)</label>
+                <input type="number" step="0.01" id="areaHectares" th:field="*{areaHectares}" required placeholder="10.5">
+            </div>
+
+            <div class="form-group">
+                <label>Corners (X, Y)</label>
+                <div class="corner-inputs">
+                    <div class="corner-group-header">Corner 1 (Top Left)</div>
+                    <input type="number" step="0.000001" name="x0" placeholder="X0" required>
+                    <input type="number" step="0.000001" name="y0" placeholder="Y0" required>
+                    
+                    <div class="corner-group-header">Corner 2 (Top Right)</div>
+                    <input type="number" step="0.000001" name="x1" placeholder="X1" required>
+                    <input type="number" step="0.000001" name="y1" placeholder="Y1" required>
+                    
+                    <div class="corner-group-header">Corner 3 (Bottom Right)</div>
+                    <input type="number" step="0.000001" name="x2" placeholder="X2" required>
+                    <input type="number" step="0.000001" name="y2" placeholder="Y2" required>
+                    
+                    <div class="corner-group-header">Corner 4 (Bottom Left)</div>
+                    <input type="number" step="0.000001" name="x3" placeholder="X3" required>
+                    <input type="number" step="0.000001" name="y3" placeholder="Y3" required>
+                </div>
+            </div>
+
+            <button type="submit">Create Plantation</button>
+        </form>
+
+        <div class="links">
+            <a th:href="@{/plantation/list}">Back to List</a>
+        </div>
+    </div>
+</body>
+</html>
