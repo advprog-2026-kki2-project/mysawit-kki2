@@ -65,12 +65,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
       - name: Set Heroku API Key
         run: echo "HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }}" >> $GITHUB_ENV
+
+      - name: Ensure full git history
+        run: git fetch --prune --unshallow || true
 
       - name: Deploy to Heroku Staging
         run: |
@@ -91,12 +96,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install Heroku CLI
         run: curl https://cli-assets.heroku.com/install.sh | sh
 
       - name: Set Heroku API Key
         run: echo "HEROKU_API_KEY=${{ secrets.HEROKU_API_KEY }}" >> $GITHUB_ENV
+
+      - name: Ensure full git history
+        run: git fetch --prune --unshallow || true
 
       - name: Deploy to Heroku Production
         run: |
