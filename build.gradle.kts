@@ -49,3 +49,26 @@ tasks.named<JacocoReport>("jacocoTestReport") {
         html.required.set(true)
     }
 }
+
+sonar {
+    properties {
+        property("sonar.host.url", "https://sonarcloud.io")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.absolutePath
+        )
+
+        providers.environmentVariable("SONAR_ORGANIZATION")
+            .orElse(providers.environmentVariable("GITHUB_REPOSITORY_OWNER"))
+            .orNull
+            ?.let { property("sonar.organization", it) }
+
+        providers.environmentVariable("SONAR_PROJECT_KEY")
+            .orElse(
+                providers.environmentVariable("GITHUB_REPOSITORY")
+                    .map { it.replace("/", "_") }
+            )
+            .orNull
+            ?.let { property("sonar.projectKey", it) }
+    }
+}
