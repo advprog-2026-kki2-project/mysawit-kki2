@@ -1,22 +1,17 @@
 plugins {
-    java
+    id("java")
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
+    id("jacoco")
+    id("org.sonarqube") version "5.0.0.4638"
 }
 
-group = "id.ac.ui.cs.advprog"
+group = "com.example"
 version = "0.0.1-SNAPSHOT"
-description = "mysawit"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-configurations {
-    compileOnly {
-        extendsFrom(configurations.annotationProcessor.get())
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
@@ -25,17 +20,20 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
-    compileOnly("org.projectlombok:lombok")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    annotationProcessor("org.projectlombok:lombok")
-    testImplementation("org.springframework.boot:spring-boot-starter-thymeleaf-test")
-    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-tasks.withType<Test> {
+tasks.named<Test>("test") {
     useJUnitPlatform()
+    finalizedBy(tasks.named("jacocoTestReport"))
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }
