@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.transport;
+package id.ac.ui.cs.advprog.mysawit.transport.model;
 
 import jakarta.persistence.*;
 import lombok.*;

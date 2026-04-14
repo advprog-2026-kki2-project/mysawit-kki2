@@ -1,5 +1,8 @@
 package id.ac.ui.cs.advprog.mysawit.transport;
 
+import id.ac.ui.cs.advprog.mysawit.transport.model.Transport;
+import id.ac.ui.cs.advprog.mysawit.transport.model.TransportStatus;
+import id.ac.ui.cs.advprog.mysawit.transport.repository.TransportRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
