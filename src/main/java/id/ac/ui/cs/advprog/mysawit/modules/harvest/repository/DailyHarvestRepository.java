@@ -1,7 +1,8 @@
-package id.ac.ui.cs.advprog.mysawit.harvest.repository;
+package id.ac.ui.cs.advprog.mysawit.modules.harvest.repository;
 
-import id.ac.ui.cs.advprog.mysawit.harvest.model.DailyHarvest;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.model.DailyHarvest;
 
 import java.time.LocalDate;
 import java.util.List;

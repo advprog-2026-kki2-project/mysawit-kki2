@@ -1,7 +1,5 @@
-package id.ac.ui.cs.advprog.mysawit.harvest.controller;
+package id.ac.ui.cs.advprog.mysawit.modules.harvest.controller;
 
-import id.ac.ui.cs.advprog.mysawit.harvest.dto.DailyHarvestRequestDto;
-import id.ac.ui.cs.advprog.mysawit.harvest.service.DailyHarvestService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +7,9 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.dto.DailyHarvestRequestDto;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.service.DailyHarvestService;
 
 @Controller
 public class DailyHarvestController {

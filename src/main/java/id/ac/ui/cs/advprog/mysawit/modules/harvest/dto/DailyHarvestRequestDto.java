@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.harvest.dto;
+package id.ac.ui.cs.advprog.mysawit.modules.harvest.dto;
 
 import lombok.Getter;
 import lombok.Setter;

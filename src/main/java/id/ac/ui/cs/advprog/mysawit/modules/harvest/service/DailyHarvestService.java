@@ -1,10 +1,11 @@
-package id.ac.ui.cs.advprog.mysawit.harvest.service;
+package id.ac.ui.cs.advprog.mysawit.modules.harvest.service;
 
-import id.ac.ui.cs.advprog.mysawit.harvest.dto.DailyHarvestRequestDto;
-import id.ac.ui.cs.advprog.mysawit.harvest.model.DailyHarvest;
-import id.ac.ui.cs.advprog.mysawit.harvest.repository.DailyHarvestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.dto.DailyHarvestRequestDto;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.model.DailyHarvest;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.repository.DailyHarvestRepository;
 
 @Service
 public class DailyHarvestService {
