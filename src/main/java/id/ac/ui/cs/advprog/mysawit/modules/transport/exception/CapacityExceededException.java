@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.transport.exception;
+package id.ac.ui.cs.advprog.mysawit.modules.transport.exception;
 
 /**
  * Thrown when the total weight of assigned crops exceeds 400kg.

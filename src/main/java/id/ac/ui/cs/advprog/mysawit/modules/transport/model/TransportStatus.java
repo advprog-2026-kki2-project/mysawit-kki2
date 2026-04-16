@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.transport.model;
+package id.ac.ui.cs.advprog.mysawit.modules.transport.model;
 
 /**
  * Requirement: State machine for delivery lifecycle.

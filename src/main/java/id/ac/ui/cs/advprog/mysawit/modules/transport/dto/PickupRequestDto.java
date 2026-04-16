@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.transport.dto;
+package id.ac.ui.cs.advprog.mysawit.modules.transport.dto;
 
 import lombok.Getter;
 import lombok.Setter;

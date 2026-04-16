@@ -1,8 +1,10 @@
-package id.ac.ui.cs.advprog.mysawit.transport.repository;
+package id.ac.ui.cs.advprog.mysawit.modules.transport.repository;
 
-import id.ac.ui.cs.advprog.mysawit.transport.model.Transport;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import id.ac.ui.cs.advprog.mysawit.modules.transport.model.Transport;
+
 import java.util.List;
 
 @Repository
