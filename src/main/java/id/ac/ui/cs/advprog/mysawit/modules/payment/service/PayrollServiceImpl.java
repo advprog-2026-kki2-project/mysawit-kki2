@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.mysawit.modules.payment.service.impl;
+package id.ac.ui.cs.advprog.mysawit.modules.payment.service;
 
 import id.ac.ui.cs.advprog.mysawit.core.model.Role;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.model.Payroll;
@@ -7,7 +7,6 @@ import id.ac.ui.cs.advprog.mysawit.modules.payment.model.PayrollStatus;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.model.WageConfiguration;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.repository.PayrollRepository;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.repository.WageConfigurationRepository;
-import id.ac.ui.cs.advprog.mysawit.modules.payment.service.PayrollService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
