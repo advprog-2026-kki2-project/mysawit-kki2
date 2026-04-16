@@ -34,7 +34,7 @@ Milestone 1: Preparation
 - Davin: Initialize the GitHub organization and created the CI/CD environment. 
 - Shelia, Juan, Rani, Zahran : Created the design decision specifications in the README.
 
-
+.
 Milestone 2: 25% Progress
 <br>Internal: 4 Mar 2026 | Official: 6 Mar 2026
 - Davin (Auth): Define the RBAC security schema, implement account registration and login for Laborers, Foremen, and Drivers.
