@@ -19,7 +19,7 @@ public class DailyHarvestService {
         this.imageStorageService = imageStorageService;
     }
 
-    public void recordHarvest(DailyHarvestRequestDto dto, MultipartFile photo) {
+    public DailyHarvest recordHarvest(DailyHarvestRequestDto dto, MultipartFile photo) {
         if (dto.getLaborerName() == null || dto.getLaborerName().isBlank()) {
             throw new IllegalArgumentException("Laborer name is required.");
         }
@@ -63,6 +63,6 @@ public class DailyHarvestService {
         harvest.setPhotoPath(photoPath);
         harvest.setStatus("PENDING");
 
-        repository.save(harvest);
+        return repository.save(harvest);
     }
 }
