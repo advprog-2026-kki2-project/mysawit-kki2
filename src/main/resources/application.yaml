@@ -16,3 +16,6 @@ spring:
   h2:
     console:
       enabled: true
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
