@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Harvest Detail</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<h1>Harvest Detail</h1>
+
+<p th:if="${message}" th:text="${message}" style="color: green;"></p>
+<p th:if="${error}" th:text="${error}" style="color: red;"></p>
+
+<div>
+  <p><strong>Laborer Name:</strong> <span th:text="${harvest.laborerName}"></span></p>
+  <p><strong>Harvest Date:</strong> <span th:text="${harvest.harvestDate}"></span></p>
+  <p><strong>Weight (kg):</strong> <span th:text="${harvest.weightKg}"></span></p>
+  <p><strong>Notes:</strong> <span th:text="${harvest.notes}"></span></p>
+  <p><strong>Status:</strong> <span th:text="${harvest.status}"></span></p>
+  <p><strong>Reviewed By:</strong> <span th:text="${harvest.reviewedBy}"></span></p>
+  <p><strong>Reviewed At:</strong> <span th:text="${harvest.reviewedAt}"></span></p>
+  <p><strong>Rejection Reason:</strong> <span th:text="${harvest.rejectionReason}"></span></p>
+</div>
+
+<br>
+
+<div>
+  <p><strong>Photo Evidence:</strong></p>
+  <img th:src="@{'/uploads/' + ${#strings.substring(harvest.photoPath, harvest.photoPath.lastIndexOf('/') + 1)}}"
+       alt="Harvest Photo" width="300">
+</div>
+
+<br>
+
+<div th:if="${harvest.status == 'PENDING'}">
+  <form th:action="@{'/foreman/harvests/' + ${harvest.id} + '/approve'}" method="post">
+    <button type="submit">Approve</button>
+  </form>
+
+  <br>
+
+  <form th:action="@{'/foreman/harvests/' + ${harvest.id} + '/reject'}"
+        th:object="${reviewRequest}" method="post">
+    <div>
+      <label for="reason">Rejection Reason:</label><br>
+      <textarea id="reason" th:field="*{reason}"></textarea>
+    </div>
+    <br>
+    <button type="submit">Reject</button>
+  </form>
+</div>
+
+<br>
+<a th:href="@{/foreman/harvests}">Back to list</a>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Foreman Harvest List</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<h1>Harvest Review List</h1>
+
+<form th:action="@{/foreman/harvests}" method="get">
+  <div>
+    <label for="laborerName">Laborer Name:</label>
+    <input type="text" id="laborerName" name="laborerName" th:value="${laborerName}">
+  </div>
+  <br>
+
+  <div>
+    <label for="harvestDate">Harvest Date:</label>
+    <input type="date" id="harvestDate" name="harvestDate" th:value="${harvestDate}">
+  </div>
+  <br>
+
+  <button type="submit">Filter</button>
+</form>
+
+<br>
+
+<table border="1" cellpadding="8">
+  <thead>
+  <tr>
+    <th>Laborer</th>
+    <th>Date</th>
+    <th>Weight (kg)</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="harvest : ${harvests}">
+    <td th:text="${harvest.laborerName}"></td>
+    <td th:text="${harvest.harvestDate}"></td>
+    <td th:text="${harvest.weightKg}"></td>
+    <td th:text="${harvest.status}"></td>
+    <td>
+      <a th:href="@{'/foreman/harvests/' + ${harvest.id}}">View Detail</a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+</body>
+</html>

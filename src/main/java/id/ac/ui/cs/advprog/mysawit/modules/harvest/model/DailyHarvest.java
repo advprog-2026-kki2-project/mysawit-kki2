@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -36,4 +37,11 @@ public class DailyHarvest {
 
     @Column(nullable = false)
     private String status;
+
+    @Column(length = 1000)
+    private String rejectionReason;
+
+    private String reviewedBy;
+
+    private LocalDateTime reviewedAt;
 }
