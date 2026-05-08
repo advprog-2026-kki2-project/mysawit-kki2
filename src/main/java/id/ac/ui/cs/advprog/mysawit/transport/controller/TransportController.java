@@ -29,7 +29,8 @@ public class TransportController {
         try {
             Transport transport = transportService.assignPickup(dto);
             return new ResponseEntity<>(transport, HttpStatus.CREATED);
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (IllegalArgumentException | IllegalStateException
+                 | id.ac.ui.cs.advprog.mysawit.transport.exception.CapacityExceededException e) {
             // Returns 400 Bad Request if weights are too high or crops aren't approved
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
