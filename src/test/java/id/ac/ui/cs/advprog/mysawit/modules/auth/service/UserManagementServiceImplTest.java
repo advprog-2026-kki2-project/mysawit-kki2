@@ -3,13 +3,17 @@ package id.ac.ui.cs.advprog.mysawit.modules.auth.service;
 import id.ac.ui.cs.advprog.mysawit.core.model.Role;
 import id.ac.ui.cs.advprog.mysawit.core.model.User;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.UserResponse;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserAssignmentEvent;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserLifecycleEvent;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,11 +23,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link UserManagementServiceImpl} focusing on:
+ * <ul>
+ *   <li>All existing CRUD operations (maintained for regression).</li>
+ *   <li>Automatic notification events published on assignment changes and deletion.</li>
+ * </ul>
+ */
 @ExtendWith(MockitoExtension.class)
 class UserManagementServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private UserManagementServiceImpl service;
@@ -124,8 +138,27 @@ class UserManagementServiceImplTest {
     }
 
     @Test
+    void assignForeman_publishesAssignedEvent() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(laborer));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman));
+        when(userRepository.save(any())).thenReturn(laborer);
+
+        service.assignForeman(1L, 2L);
+
+        ArgumentCaptor<UserAssignmentEvent> captor =
+                ArgumentCaptor.forClass(UserAssignmentEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+
+        UserAssignmentEvent event = captor.getValue();
+        assertThat(event.getType()).isEqualTo(UserAssignmentEvent.Type.ASSIGNED);
+        assertThat(event.getLaborerId()).isEqualTo(1L);
+        assertThat(event.getLaborerEmail()).isEqualTo("laborer@test.com");
+        assertThat(event.getForemanId()).isEqualTo(2L);
+    }
+
+    @Test
     void assignForeman_throwsWhenTargetIsNotLaborer() {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman));  // foreman is not laborer
+        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman));
         when(userRepository.findById(3L)).thenReturn(Optional.of(admin));
 
         assertThatThrownBy(() -> service.assignForeman(2L, 3L))
@@ -136,7 +169,7 @@ class UserManagementServiceImplTest {
     @Test
     void assignForeman_throwsWhenForemanIdRefersToNonForeman() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(laborer));
-        when(userRepository.findById(3L)).thenReturn(Optional.of(admin)); // admin is not foreman
+        when(userRepository.findById(3L)).thenReturn(Optional.of(admin));
 
         assertThatThrownBy(() -> service.assignForeman(1L, 3L))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -158,6 +191,25 @@ class UserManagementServiceImplTest {
     }
 
     @Test
+    void unassignForeman_publishesUnassignedEvent() {
+        laborer.setForemanId(2L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(laborer));
+        when(userRepository.save(any())).thenReturn(laborer);
+
+        service.unassignForeman(1L);
+
+        ArgumentCaptor<UserAssignmentEvent> captor =
+                ArgumentCaptor.forClass(UserAssignmentEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+
+        UserAssignmentEvent event = captor.getValue();
+        assertThat(event.getType()).isEqualTo(UserAssignmentEvent.Type.UNASSIGNED);
+        assertThat(event.getLaborerId()).isEqualTo(1L);
+        assertThat(event.getLaborerEmail()).isEqualTo("laborer@test.com");
+        assertThat(event.getForemanId()).isNull();
+    }
+
+    @Test
     void unassignForeman_throwsWhenNotAssigned() {
         laborer.setForemanId(null);
         when(userRepository.findById(1L)).thenReturn(Optional.of(laborer));
@@ -169,7 +221,7 @@ class UserManagementServiceImplTest {
 
     @Test
     void unassignForeman_throwsWhenNotLaborer() {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman)); // foreman can't be unassigned
+        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman));
 
         assertThatThrownBy(() -> service.unassignForeman(2L))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -186,6 +238,24 @@ class UserManagementServiceImplTest {
         service.deleteUser(2L, 3L);
 
         verify(userRepository).deleteById(2L);
+    }
+
+    @Test
+    void deleteUser_publishesDeletedEvent() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(foreman));
+        when(userRepository.findByForemanId(2L)).thenReturn(List.of());
+
+        service.deleteUser(2L, 3L);
+
+        ArgumentCaptor<UserLifecycleEvent> captor =
+                ArgumentCaptor.forClass(UserLifecycleEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+
+        UserLifecycleEvent event = captor.getValue();
+        assertThat(event.getType()).isEqualTo(UserLifecycleEvent.Type.DELETED);
+        assertThat(event.getUserId()).isEqualTo(2L);
+        assertThat(event.getUserEmail()).isEqualTo("foreman@test.com");
+        assertThat(event.getUsername()).isEqualTo("foreman1");
     }
 
     @Test

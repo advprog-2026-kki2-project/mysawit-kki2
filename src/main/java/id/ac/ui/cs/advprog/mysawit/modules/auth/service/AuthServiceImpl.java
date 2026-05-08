@@ -4,9 +4,11 @@ import id.ac.ui.cs.advprog.mysawit.core.model.User;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.RegisterRequest;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.LoginRequest;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.AuthResponse;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserLifecycleEvent;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.repository.UserRepository;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,13 +24,16 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final ApplicationEventPublisher eventPublisher;
 
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           AuthenticationManager authenticationManager) {
+                           AuthenticationManager authenticationManager,
+                           ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -43,9 +48,18 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
 
-        userRepository.save(user);
+        User saved = userRepository.save(user);
 
-        return new AuthResponse("User registered successfully", user.getUsername(), user.getRole());
+        // Publish registration notification event
+        eventPublisher.publishEvent(new UserLifecycleEvent(
+                this,
+                UserLifecycleEvent.Type.REGISTERED,
+                saved.getId(),
+                saved.getEmail(),
+                saved.getUsername()
+        ));
+
+        return new AuthResponse("User registered successfully", saved.getUsername(), saved.getRole());
     }
 
     @Override
@@ -61,6 +75,7 @@ public class AuthServiceImpl implements AuthService {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
+        // Session fixation protection: always rotate the session ID on login
         if (httpRequest.getSession(false) != null) {
             httpRequest.changeSessionId();
         }

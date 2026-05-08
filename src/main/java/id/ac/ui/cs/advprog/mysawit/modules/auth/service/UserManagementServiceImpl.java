@@ -3,8 +3,11 @@ package id.ac.ui.cs.advprog.mysawit.modules.auth.service;
 import id.ac.ui.cs.advprog.mysawit.core.model.Role;
 import id.ac.ui.cs.advprog.mysawit.core.model.User;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.UserResponse;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserAssignmentEvent;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserLifecycleEvent;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.repository.UserRepository;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +18,12 @@ import java.util.stream.Stream;
 public class UserManagementServiceImpl implements UserManagementService {
 
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public UserManagementServiceImpl(UserRepository userRepository) {
+    public UserManagementServiceImpl(UserRepository userRepository,
+                                     ApplicationEventPublisher eventPublisher) {
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -61,6 +67,15 @@ public class UserManagementServiceImpl implements UserManagementService {
         laborer.setForemanId(foremanId);
         userRepository.save(laborer);
 
+        // Publish assignment notification event
+        eventPublisher.publishEvent(new UserAssignmentEvent(
+                this,
+                UserAssignmentEvent.Type.ASSIGNED,
+                laborerId,
+                laborer.getEmail(),
+                foremanId
+        ));
+
         return toResponse(laborer);
     }
 
@@ -78,6 +93,15 @@ public class UserManagementServiceImpl implements UserManagementService {
 
         laborer.setForemanId(null);
         userRepository.save(laborer);
+
+        // Publish unassignment notification event
+        eventPublisher.publishEvent(new UserAssignmentEvent(
+                this,
+                UserAssignmentEvent.Type.UNASSIGNED,
+                laborerId,
+                laborer.getEmail(),
+                null
+        ));
 
         return toResponse(laborer);
     }
@@ -99,6 +123,15 @@ public class UserManagementServiceImpl implements UserManagementService {
         }
 
         userRepository.deleteById(userId);
+
+        // Publish deletion notification event
+        eventPublisher.publishEvent(new UserLifecycleEvent(
+                this,
+                UserLifecycleEvent.Type.DELETED,
+                userId,
+                user.getEmail(),
+                user.getUsername()
+        ));
     }
 
     // ---- helpers ----

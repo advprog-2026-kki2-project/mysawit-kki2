@@ -5,15 +5,18 @@ import id.ac.ui.cs.advprog.mysawit.core.model.User;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.AuthResponse;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.LoginRequest;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.dto.RegisterRequest;
+import id.ac.ui.cs.advprog.mysawit.modules.auth.event.UserLifecycleEvent;
 import id.ac.ui.cs.advprog.mysawit.modules.auth.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,6 +40,9 @@ class AuthServiceImplTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -72,6 +78,30 @@ class AuthServiceImplTest {
         assertThat(response.getUsername()).isEqualTo("laborer1");
         assertThat(response.getRole()).isEqualTo(Role.LABORER);
         verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void register_publishesRegisteredEvent() {
+        RegisterRequest req = new RegisterRequest();
+        req.setEmail("laborer@test.com");
+        req.setUsername("laborer1");
+        req.setPassword("Harvest123!");
+        req.setRole(Role.LABORER);
+
+        when(userRepository.findByEmail("laborer@test.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("Harvest123!")).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenReturn(laborer);
+
+        authService.register(req);
+
+        ArgumentCaptor<UserLifecycleEvent> captor =
+                ArgumentCaptor.forClass(UserLifecycleEvent.class);
+        verify(eventPublisher).publishEvent(captor.capture());
+
+        UserLifecycleEvent event = captor.getValue();
+        assertThat(event.getType()).isEqualTo(UserLifecycleEvent.Type.REGISTERED);
+        assertThat(event.getUserEmail()).isEqualTo("laborer@test.com");
+        assertThat(event.getUsername()).isEqualTo("laborer1");
     }
 
     @Test
@@ -112,6 +142,33 @@ class AuthServiceImplTest {
         assertThat(response.getUsername()).isEqualTo("laborer1");
         assertThat(response.getRole()).isEqualTo(Role.LABORER);
         verify(authenticationManager).authenticate(any());
+    }
+
+    /**
+     * When an existing session is present at login time, changeSessionId() must be called
+     * to prevent session fixation attacks.
+     */
+    @Test
+    void login_withExistingSession_callsChangeSessionId() {
+        LoginRequest req = new LoginRequest();
+        req.setEmail("laborer@test.com");
+        req.setPassword("Harvest123!");
+
+        Authentication auth = mock(Authentication.class);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth);
+
+        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        HttpSession existingSession = mock(HttpSession.class);
+        // Pre-existing session simulates an anonymous/attacker-controlled session
+        when(httpRequest.getSession(false)).thenReturn(existingSession);
+        when(httpRequest.getSession(true)).thenReturn(existingSession);
+        when(userRepository.findByEmail("laborer@test.com")).thenReturn(Optional.of(laborer));
+
+        authService.login(req, httpRequest);
+
+        // Must rotate the session ID
+        verify(httpRequest).changeSessionId();
     }
 
     // --- currentSession ---
