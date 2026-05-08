@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.mysawit.transport.service;
 
-import id.ac.ui.cs.advprog.mysawit.harvest.model.DailyHarvest;
-import id.ac.ui.cs.advprog.mysawit.harvest.repository.DailyHarvestRepository;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.model.DailyHarvest;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.repository.DailyHarvestRepository;
 import id.ac.ui.cs.advprog.mysawit.transport.dto.PickupRequestDto;
 import id.ac.ui.cs.advprog.mysawit.transport.exception.CapacityExceededException;
 import id.ac.ui.cs.advprog.mysawit.transport.model.Transport;

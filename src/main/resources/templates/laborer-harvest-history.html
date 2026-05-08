@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Laborer Harvest History</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+
+<h1>My Harvest History</h1>
+
+<form th:action="@{/harvest/history}" method="get">
+  <div>
+    <label for="laborerName">Laborer Name:</label>
+    <input type="text" id="laborerName" name="laborerName" th:value="${laborerName}">
+  </div>
+  <br>
+
+  <div>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" th:value="${startDate}">
+  </div>
+  <br>
+
+  <div>
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" th:value="${endDate}">
+  </div>
+  <br>
+
+  <div>
+    <label for="status">Harvest Status:</label>
+    <select id="status" name="status">
+      <option value="" th:selected="${status == null or status == ''}">All</option>
+      <option value="PENDING" th:selected="${status == 'PENDING'}">Pending</option>
+      <option value="APPROVED" th:selected="${status == 'APPROVED'}">Approved</option>
+      <option value="REJECTED" th:selected="${status == 'REJECTED'}">Rejected</option>
+    </select>
+  </div>
+  <br>
+
+  <button type="submit">Filter</button>
+</form>
+
+<br>
+
+<table border="1" cellpadding="8">
+  <thead>
+  <tr>
+    <th>Laborer</th>
+    <th>Date</th>
+    <th>Weight (kg)</th>
+    <th>Status</th>
+    <th>Notes</th>
+    <th>Rejection Reason</th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <tr th:each="harvest : ${harvests}">
+    <td th:text="${harvest.laborerName}"></td>
+    <td th:text="${harvest.harvestDate}"></td>
+    <td th:text="${harvest.weightKg}"></td>
+    <td th:text="${harvest.status}"></td>
+    <td th:text="${harvest.notes}"></td>
+    <td>
+      <span th:if="${harvest.status == 'REJECTED'}"
+            th:text="${harvest.rejectionReason}">
+      </span>
+      <span th:unless="${harvest.status == 'REJECTED'}">-</span>
+    </td>
+  </tr>
+
+  <tr th:if="${#lists.isEmpty(harvests)}">
+    <td colspan="6">No harvest history found.</td>
+  </tr>
+  </tbody>
+</table>
+
+<br>
+
+<a th:href="@{/harvest/create}">Submit New Harvest</a>
+
+</body>
+</html>

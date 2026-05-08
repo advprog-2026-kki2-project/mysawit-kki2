@@ -87,6 +87,19 @@ public class DailyHarvestService {
 
         return repository.findAll();
     }
+    public List<DailyHarvest> getLaborerHarvestHistory(
+        String laborerName,
+        String status,
+        LocalDate startDate,
+        LocalDate endDate
+) {
+    return repository.findLaborerHarvestHistory(
+            laborerName,
+            status,
+            startDate,
+            endDate
+    );
+}
 
     public DailyHarvest getHarvestById(String id) {
         return repository.findById(id)
@@ -126,4 +139,5 @@ public class DailyHarvestService {
 
         return repository.save(harvest);
     }
+    
 }
