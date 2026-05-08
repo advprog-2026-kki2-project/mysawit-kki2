@@ -10,15 +10,21 @@ import id.ac.ui.cs.advprog.mysawit.modules.payment.repository.WageConfigurationR
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -33,11 +39,14 @@ class PayrollServiceImplTest {
     @Mock
     private WageConfigurationRepository wageConfigurationRepository;
 
+    @Mock
+    private PaymentGateway paymentGateway;
+
     private PayrollService payrollService;
 
     @BeforeEach
     void setUp() {
-        payrollService = new PayrollServiceImpl(payrollRepository, wageConfigurationRepository);
+        payrollService = new PayrollServiceImpl(payrollRepository, wageConfigurationRepository, paymentGateway);
     }
 
     @Test
@@ -142,13 +151,92 @@ class PayrollServiceImplTest {
     void getPayrollHistoryShouldReturnEntriesByBeneficiaryReference() {
         Payroll payroll = new Payroll();
         payroll.setBeneficiaryReference("laborer-a");
-        when(payrollRepository.findByBeneficiaryReferenceOrderByCreatedAtDesc("laborer-a"))
+        when(payrollRepository.findAll(any(Specification.class), any(Sort.class)))
                 .thenReturn(List.of(payroll));
 
         List<Payroll> result = payrollService.getPayrollHistory("laborer-a");
 
         assertEquals(1, result.size());
         assertEquals("laborer-a", result.getFirst().getBeneficiaryReference());
+    }
+
+    @Test
+    void getAdminPayrollsShouldRejectInvalidDateRange() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> payrollService.getAdminPayrolls(
+                        null,
+                        null,
+                        null,
+                        java.time.LocalDate.of(2026, 5, 9),
+                        java.time.LocalDate.of(2026, 5, 8)
+                )
+        );
+
+        assertEquals("Start date must be on or before end date.", exception.getMessage());
+    }
+
+    @Test
+    void approvePayrollShouldProcessSandboxPaymentAndPersistAcceptance() {
+        Payroll payroll = pendingPayroll();
+        when(payrollRepository.findById("payroll-1")).thenReturn(Optional.of(payroll));
+        when(paymentGateway.process(payroll))
+                .thenReturn(new PaymentGatewayReceipt("SANDBOX_GATEWAY", "SBX-1234567890ABCDEF"));
+        when(payrollRepository.save(any(Payroll.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payroll result = payrollService.approvePayroll("payroll-1");
+
+        assertEquals(PayrollStatus.ACCEPTED, result.getStatus());
+        assertEquals("SANDBOX_GATEWAY", result.getPaymentGateway());
+        assertEquals("SBX-1234567890ABCDEF", result.getPaymentReference());
+        assertNotNull(result.getProcessedAt());
+        verify(paymentGateway).process(payroll);
+    }
+
+    @Test
+    void rejectPayrollShouldPersistReasonAndClearGatewayDetails() {
+        Payroll payroll = pendingPayroll();
+        payroll.setPaymentGateway("OLD_GATEWAY");
+        payroll.setPaymentReference("OLD-REF");
+        when(payrollRepository.findById("payroll-1")).thenReturn(Optional.of(payroll));
+        when(payrollRepository.save(any(Payroll.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Payroll result = payrollService.rejectPayroll("payroll-1", "Weight dispute");
+
+        assertEquals(PayrollStatus.REJECTED, result.getStatus());
+        assertEquals("Weight dispute", result.getRejectionReason());
+        assertNull(result.getPaymentGateway());
+        assertNull(result.getPaymentReference());
+        assertNotNull(result.getProcessedAt());
+    }
+
+    @Test
+    void approvePayrollShouldFailWhenPayrollDoesNotExist() {
+        when(payrollRepository.findById("missing")).thenReturn(Optional.empty());
+
+        NoSuchElementException exception = assertThrows(
+                NoSuchElementException.class,
+                () -> payrollService.approvePayroll("missing")
+        );
+
+        assertEquals("Payroll not found.", exception.getMessage());
+    }
+
+    private Payroll pendingPayroll() {
+        Payroll payroll = new Payroll();
+        payroll.setId("payroll-1");
+        payroll.setBeneficiaryReference("laborer-a");
+        payroll.setRecipientRole(Role.LABORER);
+        payroll.setSourceType(PayrollSourceType.HARVEST_APPROVAL);
+        payroll.setSourceReferenceId("harvest-001");
+        payroll.setWeightKg(new BigDecimal("100.00"));
+        payroll.setWageRatePerKg(new BigDecimal("1500.00"));
+        payroll.setAmount(new BigDecimal("135000.00"));
+        payroll.setStatus(PayrollStatus.PENDING);
+        payroll.setCreatedAt(LocalDateTime.now());
+        return payroll;
     }
 
     private WageConfiguration configuredRates() {

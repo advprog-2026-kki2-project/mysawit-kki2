@@ -7,12 +7,17 @@ import id.ac.ui.cs.advprog.mysawit.modules.payment.model.PayrollStatus;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.model.WageConfiguration;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.repository.PayrollRepository;
 import id.ac.ui.cs.advprog.mysawit.modules.payment.repository.WageConfigurationRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 public class PayrollServiceImpl implements PayrollService {
@@ -22,11 +27,14 @@ public class PayrollServiceImpl implements PayrollService {
 
     private final PayrollRepository payrollRepository;
     private final WageConfigurationRepository wageConfigurationRepository;
+    private final PaymentGateway paymentGateway;
 
     public PayrollServiceImpl(PayrollRepository payrollRepository,
-                              WageConfigurationRepository wageConfigurationRepository) {
+                              WageConfigurationRepository wageConfigurationRepository,
+                              PaymentGateway paymentGateway) {
         this.payrollRepository = payrollRepository;
         this.wageConfigurationRepository = wageConfigurationRepository;
+        this.paymentGateway = paymentGateway;
     }
 
     @Override
@@ -94,11 +102,78 @@ public class PayrollServiceImpl implements PayrollService {
     @Override
     @Transactional(readOnly = true)
     public List<Payroll> getPayrollHistory(String beneficiaryReference) {
+        return getPayrollHistory(beneficiaryReference, null, null, null);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Payroll> getPayrollHistory(String beneficiaryReference,
+                                           LocalDate startDate,
+                                           LocalDate endDate,
+                                           PayrollStatus status) {
         if (beneficiaryReference == null || beneficiaryReference.isBlank()) {
             throw new IllegalArgumentException("Beneficiary reference is required.");
         }
 
-        return payrollRepository.findByBeneficiaryReferenceOrderByCreatedAtDesc(beneficiaryReference);
+        validateDateRange(startDate, endDate);
+        Specification<Payroll> specification = hasBeneficiaryReference(beneficiaryReference)
+                .and(hasStatus(status))
+                .and(createdOnOrAfter(startDate))
+                .and(createdBeforeOrOn(endDate));
+
+        return payrollRepository.findAll(specification, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Payroll> getAdminPayrolls(String beneficiaryReference,
+                                          Role recipientRole,
+                                          PayrollStatus status,
+                                          LocalDate startDate,
+                                          LocalDate endDate) {
+        validateDateRange(startDate, endDate);
+        Specification<Payroll> specification = hasBeneficiaryReference(beneficiaryReference)
+                .and(hasRecipientRole(recipientRole))
+                .and(hasStatus(status))
+                .and(createdOnOrAfter(startDate))
+                .and(createdBeforeOrOn(endDate));
+
+        return payrollRepository.findAll(specification, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    @Override
+    @Transactional
+    public Payroll approvePayroll(String payrollId) {
+        Payroll payroll = findPayrollOrThrow(payrollId);
+        ensurePending(payroll);
+
+        PaymentGatewayReceipt receipt = paymentGateway.process(payroll);
+        payroll.setStatus(PayrollStatus.ACCEPTED);
+        payroll.setRejectionReason(null);
+        payroll.setPaymentGateway(receipt.gatewayName());
+        payroll.setPaymentReference(receipt.paymentReference());
+        payroll.setProcessedAt(LocalDateTime.now());
+
+        return payrollRepository.save(payroll);
+    }
+
+    @Override
+    @Transactional
+    public Payroll rejectPayroll(String payrollId, String rejectionReason) {
+        Payroll payroll = findPayrollOrThrow(payrollId);
+        ensurePending(payroll);
+
+        if (rejectionReason == null || rejectionReason.isBlank()) {
+            throw new IllegalArgumentException("Rejection reason is required.");
+        }
+
+        payroll.setStatus(PayrollStatus.REJECTED);
+        payroll.setRejectionReason(rejectionReason.trim());
+        payroll.setPaymentGateway(null);
+        payroll.setPaymentReference(null);
+        payroll.setProcessedAt(LocalDateTime.now());
+
+        return payrollRepository.save(payroll);
     }
 
     private Payroll createPayroll(String beneficiaryReference,
@@ -134,6 +209,62 @@ public class PayrollServiceImpl implements PayrollService {
         payroll.setDescription(buildDescription(role, normalizedRate, validatedWeight, amount));
 
         return payrollRepository.save(payroll);
+    }
+
+    private Payroll findPayrollOrThrow(String payrollId) {
+        if (payrollId == null || payrollId.isBlank()) {
+            throw new IllegalArgumentException("Payroll id is required.");
+        }
+
+        return payrollRepository.findById(payrollId)
+                .orElseThrow(() -> new NoSuchElementException("Payroll not found."));
+    }
+
+    private void ensurePending(Payroll payroll) {
+        if (payroll.getStatus() != PayrollStatus.PENDING) {
+            throw new IllegalStateException("Only pending payroll can be processed.");
+        }
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date must be on or before end date.");
+        }
+    }
+
+    private Specification<Payroll> hasBeneficiaryReference(String beneficiaryReference) {
+        return (root, query, criteriaBuilder) ->
+                beneficiaryReference == null || beneficiaryReference.isBlank()
+                        ? criteriaBuilder.conjunction()
+                        : criteriaBuilder.equal(root.get("beneficiaryReference"), beneficiaryReference.trim());
+    }
+
+    private Specification<Payroll> hasRecipientRole(Role recipientRole) {
+        return (root, query, criteriaBuilder) ->
+                recipientRole == null
+                        ? criteriaBuilder.conjunction()
+                        : criteriaBuilder.equal(root.get("recipientRole"), recipientRole);
+    }
+
+    private Specification<Payroll> hasStatus(PayrollStatus status) {
+        return (root, query, criteriaBuilder) ->
+                status == null
+                        ? criteriaBuilder.conjunction()
+                        : criteriaBuilder.equal(root.get("status"), status);
+    }
+
+    private Specification<Payroll> createdOnOrAfter(LocalDate startDate) {
+        return (root, query, criteriaBuilder) ->
+                startDate == null
+                        ? criteriaBuilder.conjunction()
+                        : criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), startDate.atStartOfDay());
+    }
+
+    private Specification<Payroll> createdBeforeOrOn(LocalDate endDate) {
+        return (root, query, criteriaBuilder) ->
+                endDate == null
+                        ? criteriaBuilder.conjunction()
+                        : criteriaBuilder.lessThan(root.get("createdAt"), endDate.plusDays(1).atStartOfDay());
     }
 
     private String buildDescription(Role role,
