@@ -46,8 +46,12 @@ public class PlantationController {
     }
 
     @GetMapping("/list")
-    public String plantationListPage(final Model model) {
-        final List<Plantation> allPlantations = service.findAll();
+    public String plantationListPage(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String foremanId,
+            final Model model) {
+        final List<Plantation> allPlantations = service.search(name, code, foremanId);
         model.addAttribute("plantations", allPlantations);
         return "PlantationList";
     }
