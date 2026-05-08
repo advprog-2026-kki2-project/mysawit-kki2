@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.mysawit.transport.service;
 
-import id.ac.ui.cs.advprog.mysawit.harvest.model.DailyHarvest;
-import id.ac.ui.cs.advprog.mysawit.harvest.repository.DailyHarvestRepository;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.model.DailyHarvest;
+import id.ac.ui.cs.advprog.mysawit.modules.harvest.repository.DailyHarvestRepository;
 import id.ac.ui.cs.advprog.mysawit.transport.dto.PickupRequestDto;
 import id.ac.ui.cs.advprog.mysawit.transport.exception.CapacityExceededException;
 import id.ac.ui.cs.advprog.mysawit.transport.model.Transport;
@@ -40,6 +40,7 @@ class TransportServiceTest {
         sampleTransport = Transport.builder()
                 .id(1L)
                 .driverId("driver-123")
+                .totalWeight(200.0)
                 .status(TransportStatus.LOADING) // Default requirement
                 .build();
 
@@ -119,5 +120,110 @@ class TransportServiceTest {
 
         // Attempting to pickup unapproved crops should fail
         assertThrows(IllegalStateException.class, () -> transportService.assignPickup(dto));
+    }
+
+    // --- Milestone 3 Tests (Foreman Verification) ---
+
+    @Test
+    void testForemanApproveDelivery() {
+        sampleTransport.setStatus(TransportStatus.ARRIVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+        when(transportRepository.save(any(Transport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Transport result = transportService.verifyByForeman(1L, true, null);
+
+        assertEquals(TransportStatus.FOREMAN_APPROVED, result.getStatus());
+        assertTrue(result.getForemanApproved());
+    }
+
+    @Test
+    void testForemanRejectDeliveryWithReason() {
+        sampleTransport.setStatus(TransportStatus.ARRIVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+        when(transportRepository.save(any(Transport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Transport result = transportService.verifyByForeman(1L, false, "Damaged goods");
+
+        assertEquals(TransportStatus.FOREMAN_REJECTED, result.getStatus());
+        assertFalse(result.getForemanApproved());
+        assertEquals("Damaged goods", result.getForemanRejectionReason());
+    }
+
+    @Test
+    void testForemanRejectWithoutReasonFails() {
+        sampleTransport.setStatus(TransportStatus.ARRIVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> transportService.verifyByForeman(1L, false, null));
+    }
+
+    @Test
+    void testForemanVerifyNonArrivedDeliveryFails() {
+        // Status is LOADING (not ARRIVED)
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+
+        assertThrows(IllegalStateException.class,
+                () -> transportService.verifyByForeman(1L, true, null));
+    }
+
+    // --- Milestone 3 Tests (Admin Verification) ---
+
+    @Test
+    void testAdminFullApproval() {
+        sampleTransport.setStatus(TransportStatus.FOREMAN_APPROVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+        when(transportRepository.save(any(Transport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Transport result = transportService.verifyByAdmin(1L, true, null, null);
+
+        assertEquals(TransportStatus.ADMIN_APPROVED, result.getStatus());
+        assertTrue(result.getAdminApproved());
+        assertEquals(200.0, result.getRecognizedWeight());
+    }
+
+    @Test
+    void testAdminPartialRejection() {
+        sampleTransport.setStatus(TransportStatus.FOREMAN_APPROVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+        when(transportRepository.save(any(Transport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Transport result = transportService.verifyByAdmin(1L, false, 150.0, "50kg spoiled");
+
+        assertEquals(TransportStatus.ADMIN_APPROVED, result.getStatus());
+        assertTrue(result.getAdminApproved());
+        assertEquals(150.0, result.getRecognizedWeight());
+        assertEquals("50kg spoiled", result.getAdminRejectionReason());
+    }
+
+    @Test
+    void testAdminFullRejection() {
+        sampleTransport.setStatus(TransportStatus.FOREMAN_APPROVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+        when(transportRepository.save(any(Transport.class))).thenAnswer(i -> i.getArguments()[0]);
+
+        Transport result = transportService.verifyByAdmin(1L, false, null, "Completely damaged");
+
+        assertEquals(TransportStatus.ADMIN_REJECTED, result.getStatus());
+        assertFalse(result.getAdminApproved());
+        assertEquals("Completely damaged", result.getAdminRejectionReason());
+    }
+
+    @Test
+    void testAdminVerifyNonForemanApprovedFails() {
+        sampleTransport.setStatus(TransportStatus.ARRIVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+
+        assertThrows(IllegalStateException.class,
+                () -> transportService.verifyByAdmin(1L, true, null, null));
+    }
+
+    @Test
+    void testAdminRejectWithoutReasonFails() {
+        sampleTransport.setStatus(TransportStatus.FOREMAN_APPROVED);
+        when(transportRepository.findById(1L)).thenReturn(Optional.of(sampleTransport));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> transportService.verifyByAdmin(1L, false, null, null));
     }
 }

@@ -29,6 +29,15 @@ public class Transport {
 
     private String rejectionReason; // For rejected results
 
+    // Foreman verification fields
+    private Boolean foremanApproved;
+    private String foremanRejectionReason;
+
+    // Admin verification fields
+    private Boolean adminApproved;
+    private String adminRejectionReason;
+    private Double recognizedWeight; // For partial rejection by Admin
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

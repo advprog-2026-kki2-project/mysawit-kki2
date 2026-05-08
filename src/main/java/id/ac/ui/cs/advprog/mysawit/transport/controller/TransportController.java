@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.mysawit.transport.controller;
 
+import id.ac.ui.cs.advprog.mysawit.transport.dto.AdminVerificationDto;
+import id.ac.ui.cs.advprog.mysawit.transport.dto.ForemanVerificationDto;
 import id.ac.ui.cs.advprog.mysawit.transport.dto.PickupRequestDto;
 import id.ac.ui.cs.advprog.mysawit.transport.model.Transport;
 import id.ac.ui.cs.advprog.mysawit.transport.model.TransportStatus;
@@ -57,5 +59,60 @@ public class TransportController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Milestone 3 Requirement: Foreman verifies an arrived delivery (approve/reject).
+     * Stage 1 of two-stage verification. Triggers Driver payroll on approval.
+     */
+    @PostMapping("/{id}/foreman-verify")
+    public ResponseEntity<?> foremanVerify(
+            @PathVariable Long id,
+            @RequestBody ForemanVerificationDto dto) {
+        try {
+            Transport result = transportService.verifyByForeman(
+                    id, dto.isApproved(), dto.getRejectionReason());
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Milestone 3 Requirement: Central Admin verifies a foreman-approved delivery.
+     * Stage 2 of two-stage verification. Supports full approval, partial rejection, and full rejection.
+     * Triggers Foreman payroll on approval (based on recognized weight).
+     */
+    @PostMapping("/{id}/admin-verify")
+    public ResponseEntity<?> adminVerify(
+            @PathVariable Long id,
+            @RequestBody AdminVerificationDto dto) {
+        try {
+            Transport result = transportService.verifyByAdmin(
+                    id, dto.isApproved(), dto.getRecognizedWeight(), dto.getRejectionReason());
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Foreman: View ongoing deliveries in their plantation.
+     */
+    @GetMapping("/ongoing")
+    public ResponseEntity<List<Transport>> getOngoingDeliveries() {
+        return ResponseEntity.ok(transportService.getOngoingDeliveries());
+    }
+
+    /**
+     * Admin: View foreman-approved deliveries ready for admin review.
+     */
+    @GetMapping("/foreman-approved")
+    public ResponseEntity<List<Transport>> getForemanApprovedDeliveries() {
+        return ResponseEntity.ok(transportService.getForemanApprovedDeliveries());
     }
 }
