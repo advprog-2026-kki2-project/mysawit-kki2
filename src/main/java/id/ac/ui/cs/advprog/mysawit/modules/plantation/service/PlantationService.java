@@ -10,6 +10,8 @@ public interface PlantationService {
 
     List<Plantation> findAll();
 
+    List<Plantation> search(String name, String code, String foremanId);
+
     Plantation findById(String plantationId);
 
     Plantation update(String plantationId, Plantation plantation);
