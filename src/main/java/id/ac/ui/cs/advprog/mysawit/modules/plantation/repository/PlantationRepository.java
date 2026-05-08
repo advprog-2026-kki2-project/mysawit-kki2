@@ -24,6 +24,14 @@ public class PlantationRepository {
         return plantationData.iterator();
     }
 
+    public Iterator<Plantation> search(String name, String code, String foremanId) {
+        return plantationData.stream()
+                .filter(p -> name == null || name.isEmpty() || p.getPlantationName().toLowerCase().contains(name.toLowerCase()))
+                .filter(p -> code == null || code.isEmpty() || p.getPlantationCode().equalsIgnoreCase(code))
+                .filter(p -> foremanId == null || foremanId.isEmpty() || p.getAssignedForemanIds().contains(foremanId))
+                .iterator();
+    }
+
     public Plantation findById(final String plantationId) {
         Plantation found = null;
         for (final Plantation plantation : plantationData) {

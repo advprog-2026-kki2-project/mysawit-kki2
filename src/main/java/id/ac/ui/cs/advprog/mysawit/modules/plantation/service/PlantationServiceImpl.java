@@ -13,12 +13,7 @@ import java.util.regex.Pattern;
 @Service
 public class PlantationServiceImpl implements PlantationService {
 
-    /*
-     * Code format: PLT-YYYYMMDD-XXXX
-     * Example: PLT-20240315-0001
-     */
-    private static final Pattern CODE_PATTERN =
-            Pattern.compile("^PLT-\\d{8}-\\d{4}$");
+    private static final Pattern CODE_PATTERN = Pattern.compile("^PLT-\\d{8}-\\d{4}$");
 
     private final PlantationRepository plantationRepository;
 
@@ -45,13 +40,21 @@ public class PlantationServiceImpl implements PlantationService {
     }
 
     @Override
+    public List<Plantation> search(String name, String code, String foremanId) {
+        final Iterator<Plantation> iterator = plantationRepository.search(name, code, foremanId);
+        final List<Plantation> result = new ArrayList<>();
+        iterator.forEachRemaining(result::add);
+        return result;
+    }
+
+    @Override
     public Plantation findById(final String plantationId) {
         return plantationRepository.findById(plantationId);
     }
 
     @Override
     public Plantation update(final String plantationId, final Plantation plantation) {
-       
+
         validateNameAndArea(plantation);
         validateCorners(plantation.getCorners());
         return plantationRepository.update(plantationId, plantation);
@@ -61,7 +64,6 @@ public class PlantationServiceImpl implements PlantationService {
     public void delete(final String plantationId) {
         plantationRepository.delete(plantationId);
     }
-
 
     private void validatePlantation(final Plantation plantation) {
         validateNameAndArea(plantation);
