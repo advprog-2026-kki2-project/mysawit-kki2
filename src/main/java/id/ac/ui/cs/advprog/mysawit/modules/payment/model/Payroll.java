@@ -57,8 +57,16 @@ public class Payroll {
     @Column(length = 1000)
     private String rejectionReason;
 
+    @Column(length = 100)
+    private String paymentGateway;
+
+    @Column(length = 255)
+    private String paymentReference;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    private LocalDateTime processedAt;
 
     @PrePersist
     void onCreate() {
