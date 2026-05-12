@@ -96,7 +96,7 @@ Deployment diagram(Shelia):
 
 * R1: Dyno Sleeping on Free/Eco Tier
 
-This risk happens because the system uses Heroku Eco or Basic dynos, which automatically “sleep” after 30 minutes without activity. When plantation workers open the application after inactivity, the first request can take 10–30 seconds due to the dyno cold-start process. This creates a poor user experience, especially during morning harvest operations when many workers access the system simultaneously. The delay may also cause users to think the system is broken or disconnected.
+This risk happens because the system uses Heroku Eco or Basic dynos, which automatically “sleep” after 30 minutes without activity. When plantation workers open the application after inactivity, the first request can take 10–30 seconds due to the dyno cold start process. This creates a poor user experience, especially during morning harvest operations when many workers access the system simultaneously. The delay may also cause users to think the system is broken or disconnected.
 
 * R2: Ephemeral Filesystem (No Persistent Storage)
 
@@ -112,7 +112,7 @@ The application is hosted in a single region without a CDN, meaning Indonesian u
 
 * R5: Monolith with No Horizontal Scaling Plan
 
-The backend combines all major modules—authentication, harvest, transport, payment, and plantation management—inside one Spring Boot application. During harvest season, a large increase in harvest submissions could overload the entire application, causing slower performance for all other services. Because everything runs together, one overloaded feature can impact the whole system.
+The backend combines all major modules (authentication, harvest, transport, payment, and plantation management) inside one Spring Boot application. During harvest season, a large increase in harvest submissions could overload the entire application, causing slower performance for all other services. Because everything runs together, one overloaded feature can impact the whole system.
 
 * R6: No API Versioning
 
@@ -132,7 +132,7 @@ Sensitive information such as database credentials, JWT secrets, and payment API
 
 * R10: No Automated Backup Verification
 
-Although Heroku Postgres provides automated backups, low-tier plans keep backups for only a limited period. If database corruption or accidental deletion is discovered too late, important plantation records, payment history, and harvest data may become permanently unrecoverable.
+Although Heroku Postgres provides automated backups, low tier plans keep backups for only a limited period. If database corruption or accidental deletion is discovered too late, important plantation records, payment history, and harvest data may become permanently unrecoverable.
 
 * R11: No Offline Mode for Field Workers
 
