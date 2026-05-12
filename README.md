@@ -92,3 +92,69 @@ Deployment diagram(Shelia):
 
 ### 3. Explanation of risk storming of the group mysawit
 (Shelia)
+**Key Findings (13 risks identified)**
+
+* R1: Dyno Sleeping on Free/Eco Tier
+
+This risk happens because the system uses Heroku Eco or Basic dynos, which automatically “sleep” after 30 minutes without activity. When plantation workers open the application after inactivity, the first request can take 10–30 seconds due to the dyno cold-start process. This creates a poor user experience, especially during morning harvest operations when many workers access the system simultaneously. The delay may also cause users to think the system is broken or disconnected.
+
+* R2: Ephemeral Filesystem (No Persistent Storage)
+
+Heroku dynos do not provide permanent local storage. Any files saved locally, such as harvest photos or logs, will disappear whenever the dyno restarts or the application is redeployed. This creates a critical risk of losing important operational data if the backend stores files directly inside the server instead of using cloud storage services like Amazon S3 or Cloudinary.
+
+* R3: No Zero-Downtime Deployment Strategy
+
+During deployment, Heroku temporarily restarts dynos, which can create short downtime periods. Even a few seconds of downtime is dangerous for a plantation management system because workers may lose data while submitting harvest records. If submissions fail during peak harvest hours, operational records can become incomplete or inconsistent.
+
+* R4: Single-Region Deployment with No CDN
+
+The application is hosted in a single region without a CDN, meaning Indonesian users may experience high latency if the server is located far away, such as in the US or Europe. Plantation workers in remote areas like Kalimantan or Sumatra may experience slow page loading and delayed API responses, reducing system efficiency during field operations.
+
+* R5: Monolith with No Horizontal Scaling Plan
+
+The backend combines all major modules—authentication, harvest, transport, payment, and plantation management—inside one Spring Boot application. During harvest season, a large increase in harvest submissions could overload the entire application, causing slower performance for all other services. Because everything runs together, one overloaded feature can impact the whole system.
+
+* R6: No API Versioning
+
+The frontend directly communicates with backend APIs without version control such as /api/v1/. This creates a strong dependency between frontend and backend systems. If developers change backend APIs, the frontend may immediately stop working. This increases the risk of deployment failures and makes rollback processes more difficult.
+
+* R7: Session State Not Shared Across Dynos
+
+If the application scales to multiple dynos, user sessions stored in memory may not be synchronized between servers. As a result, users may suddenly be logged out when their requests are routed to another dyno. This is dangerous for plantation workers because they could lose unsaved harvest submissions while working in the field.
+
+* R8: Payment Gateway Still in Sandbox Mode
+
+The system still uses a sandbox payment gateway environment. If sandbox credentials are mistakenly used in production, payments may appear successful even though no real transaction occurs. This can lead to serious financial problems, including incorrect salary payments for plantation workers.
+
+* R9: Secret Leakage via Environment Variables
+
+Sensitive information such as database credentials, JWT secrets, and payment API keys are stored in Heroku Config Vars. Any collaborator with access to the Heroku project can potentially view these secrets. Without strict access control, there is a high risk of credential leakage and unauthorized system access.
+
+* R10: No Automated Backup Verification
+
+Although Heroku Postgres provides automated backups, low-tier plans keep backups for only a limited period. If database corruption or accidental deletion is discovered too late, important plantation records, payment history, and harvest data may become permanently unrecoverable.
+
+* R11: No Offline Mode for Field Workers
+
+Plantation areas often have unstable internet connections, but the current frontend does not support offline mode or local caching. If workers lose internet access while filling out harvest forms, all entered data may disappear, forcing them to repeat their work manually.
+
+* R12: No Automated Testing Before Deployment
+
+The project lacks strong automated testing in both frontend and backend systems. Without proper testing gates in the CI/CD pipeline, broken or unstable code can be deployed directly into production. This increases the chance of system failures affecting active plantation operations.
+
+* R13: No Monitoring or Error Tracking
+
+The system currently has no monitoring, logging, or alerting tools. If the backend crashes or experiences memory issues, administrators may not realize the problem until users report it. During critical harvest periods, undetected downtime can severely disrupt plantation activities and reduce operational reliability.
+
+<hr>
+Risk Matrix:
+
+<img width="694" height="475" alt="riskmatrix" src="https://github.com/user-attachments/assets/16967c6f-b833-485a-a8c1-7a5913fa9793" />
+
+| ID   | Risk |
+|------|------|
+| R1   | Dyno sleeping causes 10–30s cold-starts for field workers |
+| R2   | Ephemeral filesystem — harvest photo uploads lost on restart |
+| R8   | Payment gateway still in Sandbox mode — no real transactions |
+| R12  | No test gate in CI/CD — broken code reaches production |
+| R13  | No monitoring/observability — silent crashes go undetected |
