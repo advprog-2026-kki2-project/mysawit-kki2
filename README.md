@@ -87,6 +87,8 @@ Deployment diagram(Shelia):
 ### 2. The future architecture of the group mysawit
 (Juansao)
 
+<img width="1067" height="1412" alt="mysawit_future_architecture_container drawio" src="https://github.com/user-attachments/assets/e058dc8a-b3da-499e-8c9f-37a1639647d7" />
+
 
 ### 3. Explanation of risk storming of the group mysawit
 (Shelia)
