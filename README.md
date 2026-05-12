@@ -73,12 +73,15 @@ Milestone 5: 100% Final
 # Tutorial 9
 ### 1. The current architecture of the group MySawit, the context, container and deployment diagram
 Context diagram(Maharani):
+
 <img width="926" height="701" alt="mysawitcontext" src="https://github.com/user-attachments/assets/f8f20ad4-efa0-4c57-b3e9-8badc4a66476" />
 
 Container diagram(Davin):
+
 <img width="1932" height="1322" alt="original" src="https://github.com/user-attachments/assets/534ac529-e103-41e1-ab26-2f636a6fff10" />
 
 Deployment diagram(Shelia): 
+
 <img width="681" height="881" alt="deployment drawio" src="https://github.com/user-attachments/assets/2d80f889-6d94-4988-88fc-27e7f0ab957e" />
 
 ### 2. The future architecture of the group mysawit
