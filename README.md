@@ -70,3 +70,13 @@ Milestone 5: 100% Final
 - Juan (Transport): Conduct full integration testing for the harvest-to-factory data flow.
 - Shelia (Payment): Finalize Observability dashboards and performance profiling reports.
 
+# Tutorial 9
+### 1. The current architecture of the group MySawit, the context, container and deployment diagram
+Context diagram:
+<img width="926" height="701" alt="mysawitcontext" src="https://github.com/user-attachments/assets/f8f20ad4-efa0-4c57-b3e9-8badc4a66476" />
+
+Container diagram:
+
+
+Deployment diagram: 
+
