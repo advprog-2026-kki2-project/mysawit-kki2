@@ -70,3 +70,21 @@ Milestone 5: 100% Final
 - Juan (Transport): Conduct full integration testing for the harvest-to-factory data flow.
 - Shelia (Payment): Finalize Observability dashboards and performance profiling reports.
 
+# Tutorial B (Module 09)
+
+## Harvest Component Diagram
+![alt text](harvest-component-diagram.png)
+
+## Code Diagram 1 — Controller Layer
+![alt text](harvestcontroller-code-diagram.png)
+
+## Code Diagram 2 — Service Layer
+![alt text](harvestservice-code-diagram.png)
+
+## Code Diagram 3 — Model and DTO
+![alt text](harvestmodel-code-diagram.png)
+
+## Code Diagram 4 — Repository and Storage
+![alt text](harvestrepository-code-diagram.png)
+
+
