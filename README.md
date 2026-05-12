@@ -75,14 +75,18 @@ Milestone 5: 100% Final
 **Individual container diagram payment(Shelia) (with its code diagram) of the group mysawit**
 
 **Component diagram**
+
 <img width="634" height="498" alt="Screenshot 2026-05-12 at 20 26 42" src="https://github.com/user-attachments/assets/673ecfd2-68ae-417c-9649-19275c981a96" />
+
 This is a C4 Component Diagram for the Payment Management Service within the MySawit backend, built as a Spring Boot module. It illustrates six internal components and their interactions with four external containers.
 The left-side green components (PaymentController, PayrollService, WageConfigService) represent the core business flow: the Frontend SPA sends requests to the REST controller, which delegates to the service layer for payroll calculation, which in turn consults WageConfigService for wage/kg rates.
 The right-side purple components (PaymentGatewayAdapter, PayrollRepository, PayrollEventListener) handle integrations: the gateway adapter communicates with Midtrans (payment provider) via HTTPS, the repository persists data to a PostgreSQL/H2 database using JPA, and the event listener handles async triggers from external modules.
 Auth module connects via a dashed arrow to PaymentController, indicating JWT-based token verification happens asynchronously/out-of-band rather than as a direct blocking call.
 
 **Code Diagram 1**
+
 <img width="506" height="423" alt="Screenshot 2026-05-12 at 20 28 15" src="https://github.com/user-attachments/assets/91a9e8f3-5ca4-4d71-a0c7-03b890dce7b9" />
+
 The diagram is a Payment Module Domain Class Diagram consisting of five components: Payroll (entity), PayrollStatus (enumeration), WageConfig (entity), PayrollService (service), and PaymentGatewayAdapter (adapter).
 The Payroll entity is the core data model, holding fields like recipientId, recipientRole, weightKg, wagePerKg, totalWage, status, and createdAt, with methods approve() and reject().
 PayrollStatus is an enumeration with three possible states — PENDING, ACCEPTED, and REJECTED — and is referenced by the Payroll entity through its status field.
@@ -91,20 +95,28 @@ PayrollService acts as the orchestrator: it uses WageConfig to determine wage ra
 PaymentGatewayAdapter wraps the external payment gateway, exposing methods chargePayroll(), checkStatus(), and refund() to decouple the service layer from the payment provider implementation.
 
 **Code Diagram 2**
+
 <img width="586" height="452" alt="Screenshot 2026-05-12 at 20 29 20" src="https://github.com/user-attachments/assets/f70ad2c4-ed23-4a21-bbf5-81816a48b4ad" />
+
 This is a sequence diagram showing the method-level flow of an admin approving a payroll in the MySawit payment module. The flow involves five participants: Admin, PaymentController, PayrollService, GatewayAdapter, and Repository.
 The Admin initiates the process by sending a POST /payroll/{id}/approve HTTP request to the PaymentController, which then delegates to PayrollService via approve(payrollId, adminId). PayrollService first performs a self-call validateStatus() to verify the payroll is in an approvable state, then calls GatewayAdapter's chargePayroll() method. GatewayAdapter communicates with the external Midtrans payment gateway via HTTPS, receives a transaction ID and success status, after which PayrollService saves the payroll as ACCEPTED through the Repository. Finally, responses bubble back up the chain, ending with a 200 OK { payrollId, status } returned to the Admin. An alt fragment at the bottom notes that if the gateway call fails, a PaymentGatewayException is thrown and the payroll status remains PENDING.
 
 **Code Diagram 3**
+
 <img width="618" height="474" alt="Screenshot 2026-05-12 at 20 30 42" src="https://github.com/user-attachments/assets/0f689888-726d-40e6-a402-afb7354f2168" />
+
 This diagram illustrates the asynchronous payroll creation event flow in a payment module. Three publisher services — HarvestService, DeliveryService, and OrderService — each fire their respective Spring ApplicationEvent (e.g., HarvestApprovedEvent) when an approval occurs. These events are consumed asynchronously by a single PayrollEventListener, which is decorated with Spring's @EventListener annotation, represented by the dashed arrows. Inside the listener, the wage is calculated using a configurable formula sourced from WageConfig — for example, a laborer's pay is computed as wagePerKg × weightKg × 0.9, with drivers and foremen using different rates. After the wage is resolved, the listener builds a Payroll entity and persists it to the database via PayrollRepository.save(). The design is fully decoupled: publisher modules have no direct dependency on the payment module, making the architecture clean and extensible.
 
 **Code Diagram 4**
+
 <img width="531" height="570" alt="Screenshot 2026-05-12 at 20 32 49" src="https://github.com/user-attachments/assets/df0cc240-da43-4a57-abea-424b0601da11" />
+
 The flowchart represents the calculateWage(event) function, which handles payroll calculation logic for different worker roles. It begins by fetching the latest wage configuration from wageConfigRepo.findLatest(). The flow then hits a decision node (event.role?) that branches into three paths: LABORER, DRIVER, or FOREMAN. Both LABORER and DRIVER use the same formula (rate × kg × 0.9), while FOREMAN uses rate × approvedKg × 0.9, reflecting a distinction based on approved weight rather than raw weight. All three branches converge into a single step that builds a Payroll entity with a PENDING status and a description. Finally, the payroll is persisted via repository.save(payroll) and the completed Payroll object is returned.
 
 **Code Diagram 5**
+
 <img width="797" height="446" alt="Screenshot 2026-05-12 at 20 36 13" src="https://github.com/user-attachments/assets/b1f8cd97-238e-4864-9d30-f30a688125d8" />
+
 This is a UML State Machine diagram for a PayrollStatus entity, showing all valid lifecycle transitions. The flow begins at an initial pseudo-state (filled circle), where a PayrollEventListener creates the payroll and immediately places it in the PENDING state, which sends a notification on entry.
 From PENDING, an admin can take one of two actions: approve the payroll (guarded by [gateway success]), transitioning it to ACCEPTED, or reject it (guarded by [reason required]), transitioning it to REJECTED. The ACCEPTED state represents a successfully processed payment and logs a transaction ID (txId) on exit, while the REJECTED state records the reason for refusal on exit.
 Both ACCEPTED and REJECTED are terminal states — each leads to a final pseudo-state (bullseye circle) and cannot be re-opened or reversed, as enforced by the "no re-open once terminal" guard note at the bottom.
