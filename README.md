@@ -148,7 +148,7 @@ The system currently has no monitoring, logging, or alerting tools. If the backe
 
 <hr>
 Risk Matrix:
-
+<br>
 <img width="694" height="475" alt="riskmatrix" src="https://github.com/user-attachments/assets/16967c6f-b833-485a-a8c1-7a5913fa9793" />
 
 | ID   | Risk |
